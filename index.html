@@ -5,15 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Un Messaggio per Rachele</title>
     
-    <!-- Importiamo PyScript -->
     <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
     <script defer src="https://pyscript.net/latest/pyscript.js"></script>
 
-    <!-- Stile per la console e il testo -->
     <style>
         body {
-            background-color: #1e1e1e;
-            color: #dcdcdc;
+            background-color: #0d0d0d;
+            color: #e0e0e0;
             font-family: 'Courier New', Courier, monospace;
             display: flex;
             justify-content: center;
@@ -22,18 +20,28 @@
             margin: 0;
             overflow: hidden;
         }
-        #output {
-            white-space: pre; /* Mantiene la formattazione del testo e degli ASCII art */
-            font-size: 14px;
-            line-height: 1.2;
+        #container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        /* Usiamo <pre> per l'arte ASCII, che preserva spazi e a-capo */
+        #ascii-art {
+            font-size: 10px; /* Riduciamo la dimensione per farlo stare meglio */
+            line-height: 1.0;
             text-align: left;
-            overflow: auto; /* Aggiunge scroll se il contenuto è troppo grande */
-            max-width: 95%;
-            max-height: 95vh;
+        }
+        #message {
+            font-size: 18px;
+            margin-top: 15px;
+            height: 50px; /* Altezza fissa per evitare salti */
+            text-align: center;
         }
         #finale-container {
-            display: none; /* Nascosto all'inizio */
-            margin-top: 20px;
+            display: none;
             text-align: center;
         }
         button {
@@ -44,41 +52,45 @@
             color: white;
             border: none;
             border-radius: 5px;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     
     <div id="container">
-        <div id="output">Inizializzazione in corso...</div>
+        <pre id="ascii-art">Inizializzazione...</pre>
+        <div id="message"></div>
         <div id="finale-container">
             <span id="messaggio-finale"></span>
             <button py-click="chiudi_finestra()">Premi qui per finire</button>
         </div>
     </div>
 
-    <!-- Qui mettiamo il nostro codice Python tradotto per il web -->
     <py-script>
 import asyncio
-from js import document, window
+from js import document
+
+# --- Elementi della pagina ---
+ascii_div = document.getElementById("ascii-art")
+message_div = document.getElementById("message")
+finale_container = document.getElementById("finale-container")
+messaggio_finale_span = document.getElementById("messaggio-finale")
 
 # --- CONFIGURAZIONE ---
-NOME_DESTINATARIO = "Rachele"
-
-# Tempistiche
 PAUSA_LENTA = 3
 PAUSA_LENTISSIMA = 5
-VELOCITA_DISEGNO = 0.03
+VELOCITA_DISEGNO = 0.02
 PAUSA_PUNTINI = 0.4
 
-# Messaggi della storia
-MESSAGGIO_INIZIALE = f"\n...e ora, un messaggio dalla nostra sponsor."
-MESSAGGIO_GESTACCIO_INNOCENTE = "\nCosa c'è? Ti sto solo... fissando. Sì, esatto."
-MESSAGGIO_RESIGNATO = "\nUff, e va bene! Non volevo essere scortese!"
-MESSAGGIO_SALUTO_FINALE = "\nEcco, contenta adesso? Un saluto. Solo per te."
-MESSAGGIO_FINALE_TESTO = "\nBene, abbiamo finito. Puoi... puoi andare ora."
+# Messaggi
+MESSAGGIO_INIZIALE = f"...e ora, un messaggio dalla nostra sponsor."
+MESSAGGIO_GESTACCIO_INNOCENTE = "Cosa c'è? Ti sto solo... fissando. Sì, esatto."
+MESSAGGIO_RESIGNATO = "Uff, e va bene! Non volevo essere scortese!"
+MESSAGGIO_SALUTO_FINALE = "Ecco, contenta adesso? Un saluto. Solo per te."
+MESSAGGIO_FINALE_TESTO = "Bene, abbiamo finito. Puoi... puoi andare ora."
 
-# --- GRAFICA (CORRETTA CON r"""...""") ---
+# --- GRAFICA ---
 RACHELE_TI_AMO_ASCII = r"""
                          ,--,      ,--,                                                    ,----,       ,----,                   
         ,--,          ,---.'|   ,---.'|       ,----..                  ,--.              ,/   .`|     ,/   .`|                   
@@ -209,63 +221,54 @@ HELLO_KITTY_SALUTO = r"""
 ===========================================================================================================
 """
 
-# Funzioni "tradotte" per il web
-output_div = document.getElementById("output")
-
-def scrivi_su_pagina(testo):
-    output_div.innerText = testo # Usiamo innerText per sicurezza con l'ASCII art
+# --- Funzioni di supporto ---
+async def mostra_scena(artwork="", messaggio="", pausa=0):
+    ascii_div.innerText = artwork
+    message_div.innerText = messaggio
+    if pausa > 0:
+        await asyncio.sleep(pausa)
 
 async def animazione_punti(artwork, durata):
-    stati = ['.', '..', '...', '....', '.....']
+    ascii_div.innerText = artwork
+    stati = ['.  ', '.. ', '...'] # Spazi per evitare salti di layout
     start_time = asyncio.get_event_loop().time()
     i = 0
     while asyncio.get_event_loop().time() - start_time < durata:
-        puntini = stati[i % len(stati)]
-        scrivi_su_pagina(artwork + "\n" + puntini)
+        message_div.innerText = stati[i % len(stati)]
         await asyncio.sleep(PAUSA_PUNTINI)
         i += 1
 
-def mostra_input_finale():
-    scrivi_su_pagina("") # Pulisce lo schermo
-    document.getElementById("messaggio-finale").innerText = MESSAGGIO_FINALE_TESTO
-    document.getElementById("finale-container").style.display = "block"
-
 def chiudi_finestra(*args, **kwargs):
-    # Semplicemente nasconde tutto e mostra un messaggio di addio
     document.getElementById("container").innerHTML = "<h1>Arrivederci!</h1>"
 
-# --- FLUSSO PRINCIPALE (versione ASINCRONA per il web) ---
+# --- FLUSSO PRINCIPALE ---
 async def main():
-    scrivi_su_pagina("") # Pulisce "Inizializzazione..."
-    await asyncio.sleep(1)
+    await mostra_scena(messaggio="Inizializzazione...", pausa=1)
 
     # Atto 0: La Grande Rivelazione
     testo_temp = ""
     for riga in RACHELE_TI_AMO_ASCII.splitlines():
         testo_temp += riga + "\n"
-        scrivi_su_pagina(testo_temp)
+        ascii_div.innerText = testo_temp
         await asyncio.sleep(VELOCITA_DISEGNO)
+    message_div.innerText = ""
     await asyncio.sleep(PAUSA_LENTISSIMA)
 
     # Atto 1: Inizio della commedia
-    scrivi_su_pagina(MESSAGGIO_INIZIALE)
-    await asyncio.sleep(PAUSA_LENTA)
-    
-    scrivi_su_pagina(HELLO_KITTY_GESTACCIO + MESSAGGIO_GESTACCIO_INNOCENTE)
-    await asyncio.sleep(PAUSA_LENTISSIMA)
+    await mostra_scena(messaggio=MESSAGGIO_INIZIALE, pausa=PAUSA_LENTA)
+    await mostra_scena(artwork=HELLO_KITTY_GESTACCIO, messaggio=MESSAGGIO_GESTACCIO_INNOCENTE, pausa=PAUSA_LENTISSIMA)
 
     # Atto 2: Il panico
     await animazione_punti(HELLO_KITTY_GESTACCIO, durata=PAUSA_LENTISSIMA)
 
     # Atto 3: La resa
-    scrivi_su_pagina(MESSAGGIO_RESIGNATO)
-    await asyncio.sleep(PAUSA_LENTA)
+    await mostra_scena(messaggio=MESSAGGIO_RESIGNATO, pausa=PAUSA_LENTA)
+    await mostra_scena(artwork=HELLO_KITTY_SALUTO, messaggio=MESSAGGIO_SALUTO_FINALE, pausa=PAUSA_LENTISSIMA)
     
-    scrivi_su_pagina(HELLO_KITTY_SALUTO + MESSAGGIO_SALUTO_FINALE)
-    await asyncio.sleep(PAUSA_LENTISSIMA)
-
-    # Conclusione con bottone
-    mostra_input_finale()
+    # Conclusione
+    await mostra_scena() # Pulisce lo schermo
+    messaggio_finale_span.innerText = MESSAGGIO_FINALE_TESTO
+    finale_container.style.display = "block"
 
 # Avvia la funzione principale
 asyncio.ensure_future(main())
