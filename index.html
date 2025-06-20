@@ -20,6 +20,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
         }
         #output {
             white-space: pre; /* Mantiene la formattazione del testo e degli ASCII art */
@@ -28,10 +29,21 @@
             text-align: left;
             overflow: auto; /* Aggiunge scroll se il contenuto è troppo grande */
             max-width: 95%;
+            max-height: 95vh;
         }
         #finale-container {
             display: none; /* Nascosto all'inizio */
             margin-top: 20px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -50,7 +62,7 @@
 import asyncio
 from js import document, window
 
-# --- CONFIGURAZIONE (identica a prima) ---
+# --- CONFIGURAZIONE ---
 NOME_DESTINATARIO = "Rachele"
 
 # Tempistiche
@@ -66,8 +78,8 @@ MESSAGGIO_RESIGNATO = "\nUff, e va bene! Non volevo essere scortese!"
 MESSAGGIO_SALUTO_FINALE = "\nEcco, contenta adesso? Un saluto. Solo per te."
 MESSAGGIO_FINALE_TESTO = "\nBene, abbiamo finito. Puoi... puoi andare ora."
 
-# --- GRAFICA (le stringhe sono le stesse) ---
-RACHELE_TI_AMO_ASCII = """
+# --- GRAFICA (CORRETTA CON r"""...""") ---
+RACHELE_TI_AMO_ASCII = r"""
                          ,--,      ,--,                                                    ,----,       ,----,                   
         ,--,          ,---.'|   ,---.'|       ,----..                  ,--.              ,/   .`|     ,/   .`|                   
       ,--.'|    ,---,.|   | :   |   | :      /   /   \             ,--/  /|   ,---,    ,`   .'  :   ,`   .'  :                   
@@ -97,7 +109,7 @@ RACHELE_TI_AMO_ASCII = """
                                             `--`                                                                                 
 """
 
-HELLO_KITTY_GESTACCIO = """
+HELLO_KITTY_GESTACCIO = r"""
 ===========================================================================================================
 ===========================================================================================================
 ===========================================================================================================
@@ -147,7 +159,7 @@ HELLO_KITTY_GESTACCIO = """
 ===========================================================================================================
 """
 
-HELLO_KITTY_SALUTO = """
+HELLO_KITTY_SALUTO = r"""
 ===========================================================================================================
 ===========================================================================================================
 ===========================================================================================================
@@ -201,7 +213,7 @@ HELLO_KITTY_SALUTO = """
 output_div = document.getElementById("output")
 
 def scrivi_su_pagina(testo):
-    output_div.innerHTML = testo
+    output_div.innerText = testo # Usiamo innerText per sicurezza con l'ASCII art
 
 async def animazione_punti(artwork, durata):
     stati = ['.', '..', '...', '....', '.....']
@@ -218,7 +230,7 @@ def mostra_input_finale():
     document.getElementById("messaggio-finale").innerText = MESSAGGIO_FINALE_TESTO
     document.getElementById("finale-container").style.display = "block"
 
-def chiudi_finestra():
+def chiudi_finestra(*args, **kwargs):
     # Semplicemente nasconde tutto e mostra un messaggio di addio
     document.getElementById("container").innerHTML = "<h1>Arrivederci!</h1>"
 
